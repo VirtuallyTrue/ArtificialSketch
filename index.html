@@ -318,7 +318,8 @@
                 resetUI();
                 startLoadingAnimation();
 
-                const [image1Result, image2Result] = await Promise.all([
+                // Wait for both API calls to complete
+                await Promise.all([
                     generateImage('imagen-3.0-generate-002', prompt, image1, downloadBtn1, shareBtn1),
                     generateImage('gemini-2.5-flash-image-preview', prompt, image2, downloadBtn2, shareBtn2)
                 ]);
