@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtually True: The AI Canvas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            color: #4a4a4a;
+        }
+
+        .container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .card {
+            background-color: #ffffff;
+            padding: 2.5rem;
+            border-radius: 1.5rem;
+            width: 100%;
+            max-width: 650px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .loading-bar-container {
+            width: 100%;
+            height: 12px;
+            background-color: #e5e5e5;
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+
+        .loading-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #6c5ce7, #a29bfe);
+            transition: width 0.3s ease-in-out;
+            border-radius: 9999px;
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            margin-top: 1rem;
+            font-weight: 500;
+        }
+
+        .shine-button {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .shine-button::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: skewX(-20deg);
+            transition: all 0.5s ease-in-out;
+        }
+
+        .shine-button:hover::after {
+            left: 100%;
+        }
+
+        .prompt-input {
+            transition: border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            
+        }
+        .prompt-input:focus {
+            box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.3);
+        }
+
+        .header-container {
+            position: relative;
+        }
+
+        .header-subtitle {
+            position: absolute;
+            top: 2rem;
+            right: -0rem;
+            transform: rotate(-0deg);
+            width: max-content;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background: linear-gradient(90deg, #6c5ce7, #a29bfe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            color: transparent;
+        }
+        
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Header with company branding and new creative title -->
+        <header class="w-full max-w-2xl px-4 flex items-center justify-center space-x-4 mb-8">
+            <div class="w-12 h-12">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18c-4.418 0-8-3.582-8-8s3.582-8 8-8 8 3.582 8 8-3.582 8-8 8z" fill="#4a4a4a"/>
+                    <path d="M12 4v16m-4-8h8" stroke="url(#gradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <defs>
+                        <linearGradient id="gradient" x1="12" y1="4" x2="12" y2="20" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#3498db"/>
+                            <stop offset="1" stop-color="#2c3e50"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <div class="header-container">
+                <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-blue-500">
+                    The Artificial Sketch
+                </h1>
+                <p class="header-subtitle">By Sameer :VT Studios</p>
+            </div>
+        </header>
+
+        <div class="card">
+            <p class="mb-6 text-gray-600 font-medium tracking-wide">Enter a text prompt to generate images using both models simultaneously.</p>
+            
+            <textarea id="promptInput" rows="4" class="prompt-input w-full p-4 mb-6 rounded-xl bg-gray-100 text-gray-800 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="e.g., A majestic lion wearing a futuristic spacesuit, digital art, high detail, vibrant colors"></textarea>
+
+            <button id="generateBtn" class="shine-button w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold py-4 px-6 rounded-xl transition duration-300 ease-in-out transform hover:scale-105">
+                Generate Images
+            </button>
+
+            <div id="loadingIndicator" class="hidden mt-6">
+                <div class="flex items-center justify-center space-x-2 text-blue-500 font-medium">
+                    <p id="loadingText">Generating image...</p>
+                    <span id="loadingPercent" class="font-bold">0%</span>
+                </div>
+                <div class="loading-bar-container mt-3">
+                    <div id="loadingBar" class="loading-bar"></div>
+                </div>
+            </div>
+            
+            <div id="errorMessage" class="error-message hidden"></div>
+        </div>
+        
+        <div class="w-full max-w-2xl mt-8">
+            <h2 class="text-2xl font-semibold mb-4 tracking-wide text-gray-600">Generated Images:</h2>
+            <div id="image-container" class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+                
+                <div class="bg-white rounded-2xl overflow-hidden border border-gray-200 p-2 flex flex-col items-center flex-1">
+                    <h3 class="font-semibold text-lg mb-2">Imagen 3.0</h3>
+                    <img id="image1" src="https://placehold.co/300x300/f5f5f5/a3a3a3?text=Imagen+3.0" alt="Generated Image 1" class="w-full h-auto object-cover rounded-xl">
+                    <div class="flex space-x-2 mt-4">
+                        <button id="downloadBtn1" class="bg-gradient-to-r from-green-400 to-green-500 text-white font-semibold py-2 px-4 rounded-xl transition duration-300 ease-in-out transform hover:scale-105" disabled>Download</button>
+                        <button id="shareBtn1" class="bg-gradient-to-r from-teal-400 to-blue-500 text-white font-semibold py-2 px-4 rounded-xl transition duration-300 ease-in-out transform hover:scale-105" disabled>Share</button>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-2xl overflow-hidden border border-gray-200 p-2 flex flex-col items-center flex-1">
+                    <h3 class="font-semibold text-lg mb-2">Gemini 2.5 Flash</h3>
+                    <img id="image2" src="https://placehold.co/300x300/f5f5f5/a3a3a3?text=Gemini+2.5+Flash" alt="Generated Image 2" class="w-full h-auto object-cover rounded-xl">
+                    <div class="flex space-x-2 mt-4">
+                        <button id="downloadBtn2" class="bg-gradient-to-r from-green-400 to-green-500 text-white font-semibold py-2 px-4 rounded-xl transition duration-300 ease-in-out transform hover:scale-105" disabled>Download</button>
+                        <button id="shareBtn2" class="bg-gradient-to-r from-teal-400 to-blue-500 text-white font-semibold py-2 px-4 rounded-xl transition duration-300 ease-in-out transform hover:scale-105" disabled>Share</button>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+
+        <!-- Footer with copyright -->
+        <footer class="w-full mt-12 py-4 text-center text-gray-500 text-sm">
+            &copy; 2025 Virtually True Studios. All rights reserved.
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const promptInput = document.getElementById('promptInput');
+            const generateBtn = document.getElementById('generateBtn');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const loadingText = document.getElementById('loadingText');
+            const loadingPercent = document.getElementById('loadingPercent');
+            const loadingBar = document.getElementById('loadingBar');
+            const errorMessage = document.getElementById('errorMessage');
+
+            const image1 = document.getElementById('image1');
+            const downloadBtn1 = document.getElementById('downloadBtn1');
+            const shareBtn1 = document.getElementById('shareBtn1');
+            
+            const image2 = document.getElementById('image2');
+            const downloadBtn2 = document.getElementById('downloadBtn2');
+            const shareBtn2 = document.getElementById('shareBtn2');
+
+            let progressInterval;
+            
+            const startLoadingAnimation = () => {
+                loadingIndicator.classList.remove('hidden');
+                loadingBar.style.width = '0%';
+                loadingPercent.textContent = '0%';
+                loadingText.textContent = 'Generating images...';
+                
+                let progress = 0;
+                const duration = 15000; 
+                const interval = 50;
+                const increment = (100 / (duration / interval));
+
+                progressInterval = setInterval(() => {
+                    progress += increment;
+                    if (progress >= 95) {
+                        clearInterval(progressInterval);
+                        progress = 95;
+                        loadingText.textContent = 'Finalizing images...';
+                    }
+                    loadingBar.style.width = `${progress}%`;
+                    loadingPercent.textContent = `${Math.round(progress)}%`;
+                }, interval);
+            };
+
+            const stopLoadingAnimation = () => {
+                clearInterval(progressInterval);
+                loadingBar.style.width = '100%';
+                loadingPercent.textContent = '100%';
+                loadingText.textContent = 'Images generated!';
+                setTimeout(() => {
+                    loadingIndicator.classList.add('hidden');
+                }, 500);
+            };
+
+            const resetUI = () => {
+                errorMessage.classList.add('hidden');
+                image1.src = "https://placehold.co/300x300/f5f5f5/a3a3a3?text=Imagen+3.0";
+                image2.src = "https://placehold.co/300x300/f5f5f5/a3a3a3?text=Gemini+2.5+Flash";
+
+                [downloadBtn1, shareBtn1, downloadBtn2, shareBtn2].forEach(btn => {
+                    btn.disabled = true;
+                    btn.classList.add('opacity-50', 'cursor-not-allowed');
+                });
+            };
+
+            const generateImage = async (model, prompt, imageElement, downloadBtn, shareBtn) => {
+                const apiKey = "";
+                let payload;
+                let apiUrl;
+                
+                if (model === 'imagen-3.0-generate-002') {
+                    payload = { 
+                        instances: [{ prompt: prompt }], 
+                        parameters: { "sampleCount": 1 } 
+                    };
+                    apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+                } else if (model === 'gemini-2.5-flash-image-preview') {
+                    payload = {
+                        contents: [{
+                            parts: [{ text: prompt }]
+                        }],
+                        generationConfig: {
+                            responseModalities: ['TEXT', 'IMAGE']
+                        },
+                    };
+                    apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${apiKey}`;
+                }
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    let base64Data;
+                    
+                    if (model === 'imagen-3.0-generate-002') {
+                        base64Data = result?.predictions?.[0]?.bytesBase64Encoded;
+                    } else {
+                        base64Data = result?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
+                    }
+
+                    if (base64Data) {
+                        const imageUrl = `data:image/png;base64,${base64Data}`;
+                        imageElement.src = imageUrl;
+                        downloadBtn.disabled = false;
+                        shareBtn.disabled = false;
+                        downloadBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        shareBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    } else {
+                        throw new Error('No image data found in the response.');
+                    }
+                } catch (error) {
+                    errorMessage.textContent = `Failed to generate image from ${model}. Please try again.`;
+                    errorMessage.classList.remove('hidden');
+                    console.error('API call failed:', error);
+                    imageElement.src = "https://placehold.co/300x300/f5f5f5/a3a3a3?text=Error";
+                }
+            };
+
+            generateBtn.addEventListener('click', async () => {
+                const prompt = promptInput.value.trim();
+                if (!prompt) {
+                    errorMessage.textContent = 'Please enter a prompt to generate images.';
+                    errorMessage.classList.remove('hidden');
+                    return;
+                }
+                
+                resetUI();
+                startLoadingAnimation();
+
+                const [image1Result, image2Result] = await Promise.all([
+                    generateImage('imagen-3.0-generate-002', prompt, image1, downloadBtn1, shareBtn1),
+                    generateImage('gemini-2.5-flash-image-preview', prompt, image2, downloadBtn2, shareBtn2)
+                ]);
+                
+                stopLoadingAnimation();
+            });
+
+            const setupButtonListeners = (downloadBtn, shareBtn, imageElement) => {
+                downloadBtn.addEventListener('click', () => {
+                    const imageUrl = imageElement.src;
+                    if (imageUrl.startsWith('data:')) {
+                        const link = document.createElement('a');
+                        link.href = imageUrl;
+                        link.download = 'ai_image.png';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    }
+                });
+
+                shareBtn.addEventListener('click', () => {
+                    const prompt = promptInput.value.trim();
+                    const shareText = `Check out this AI-generated image I created with the prompt: "${prompt}"`;
+                    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+                    window.open(whatsappUrl, '_blank');
+                });
+            };
+
+            setupButtonListeners(downloadBtn1, shareBtn1, image1);
+            setupButtonListeners(downloadBtn2, shareBtn2, image2);
+        });
+    </script>
+</body>
+</html>
